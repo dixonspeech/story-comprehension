@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Comprehension Progress Tracker</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  </style>
+</head>
+<body id="app-body" class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="window.navigateTo('login')">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
+          <i class="fa-solid fa-book-open-reader text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight text-slate-800">Story Comprehension</h1>
+          <p class="text-xs text-slate-500 font-medium">WH- Progress Tracker (20 Passages)</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div id="active-student-badge" class="hidden items-center space-x-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+          <i class="fa-solid fa-user-graduate"></i>
+          <span>Student: <strong id="current-initials-display">--</strong></span>
+          <button onclick="window.logoutStudent()" class="ml-1 text-indigo-400 hover:text-indigo-900"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <button id="nav-portal-btn" onclick="window.togglePortalMode()" type="button" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition">
+          <i class="fa-solid fa-user-shield" id="portal-icon"></i>
+          <span id="portal-btn-text">Teacher Admin</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+
+    <!-- STUDENT LOGIN VIEW -->
+    <section id="view-login" class="max-w-md w-full mx-auto my-auto py-8">
+      <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 text-center">
+        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+          <i class="fa-solid fa-pencil"></i>
+        </div>
+        <h2 class="font-bold text-2xl text-slate-800 mb-1">Welcome, Reader!</h2>
+        <p class="text-slate-500 text-sm mb-6">Enter your initials to begin today's assigned story.</p>
+
+        <form id="student-login-form" action="javascript:void(0);" onsubmit="window.handleStudentLogin(event)" class="space-y-4">
+          <div>
+            <label for="student-initials" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 text-left">
+              Your Initials (2 to 4 Letters)
+            </label>
+            <input 
+              type="text" 
+              id="student-initials" 
+              maxlength="4" 
+              placeholder="e.g. JD" 
+              required
+              autocomplete="off"
+              class="w-full text-center uppercase tracking-widest text-2xl font-bold py-3 px-4 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            id="btn-start-story"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-base"
+          >
+            <span>Start Assigned Story</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <div id="login-error-banner" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold text-center"></div>
+      </div>
+    </section>
+
+    <!-- DAILY STORY LOCKED SCREEN -->
+    <section id="view-daily-locked" class="hidden max-w-lg w-full mx-auto my-auto text-center py-8">
+      <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
+        <div class="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <h2 class="font-bold text-3xl text-slate-800 mb-2">Great Work Today, <span id="locked-initials" class="text-indigo-600">--</span>! 🎉</h2>
+        <p class="text-slate-600 text-sm mb-6">
+          You have already completed your story for today (<strong id="locked-date-display">--</strong>). Please come back tomorrow for <span id="locked-next-story-num" class="font-bold text-indigo-700">Story #--</span>!
+        </p>
+        <button onclick="window.logoutStudent()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition">Log Out / Switch Initials</button>
+      </div>
+    </section>
+
+    <!-- READING MODULE VIEW -->
+    <section id="view-reading" class="hidden flex-1 flex flex-col space-y-6">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <span id="story-badge-num" class="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-lg text-sm">Story 1 of 20</span>
+          <div>
+            <h2 id="story-title" class="font-bold text-xl text-slate-800">Story Title</h2>
+            <p id="story-topic" class="text-xs text-slate-500 font-medium">Topic</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button id="btn-play-passage" onclick="window.playPassageAudio()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+            <i class="fa-solid fa-volume-high mr-1"></i> Read Passage Aloud
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-h-[80vh] flex flex-col">
+          <div class="pb-3 mb-4 border-b border-slate-100 text-xs font-bold uppercase text-slate-400">Story Passage</div>
+          <div id="passage-container" class="overflow-y-auto custom-scrollbar pr-2 leading-relaxed text-slate-700 text-base sm:text-lg space-y-4"></div>
+        </div>
+
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+          <div class="pb-3 mb-4 border-b border-slate-100 text-xs font-bold uppercase text-slate-400">WH- Comprehension Questions</div>
+          <form id="wh-quiz-form" action="javascript:void(0);" onsubmit="window.handleQuizSubmit(event)" class="space-y-6">
+            <div id="questions-container" class="space-y-6"></div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition">Submit My Answers</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS VIEW -->
+    <section id="view-results" class="hidden max-w-2xl w-full mx-auto my-auto py-6 space-y-6">
+      <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 text-center">
+        <h2 class="font-bold text-3xl text-slate-800 mb-2">Quiz Completed!</h2>
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-6 max-w-sm mx-auto grid grid-cols-2 gap-4">
+          <div>
+            <span class="block text-xs font-bold uppercase text-slate-400">Score</span>
+            <span id="result-score-percent" class="font-bold text-4xl text-indigo-600">0%</span>
+          </div>
+          <div>
+            <span class="block text-xs font-bold uppercase text-slate-400">Correct</span>
+            <span id="result-score-raw" class="font-bold text-4xl text-slate-800">0 / 5</span>
+          </div>
+        </div>
+        <button onclick="window.continueToNextStory()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl transition">Continue</button>
+      </div>
+    </section>
+
+    <!-- TEACHER ADMIN VIEW -->
+    <section id="view-admin" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="font-bold text-2xl text-slate-800">Class Progress Roster</h2>
+          <p class="text-xs text-slate-400">Teacher Admin Dashboard</p>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="window.exportDataCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">Export CSV Data</button>
+          <button onclick="window.seedDemoData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2.5 rounded-xl transition">Seed Sample Data</button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
+            <tr>
+              <th class="py-3 px-4">Initials</th>
+              <th class="py-3 px-4">Stories Completed</th>
+              <th class="py-3 px-4">Average Score</th>
+              <th class="py-3 px-4">Last Active</th>
+            </tr>
+          </thead>
+          <tbody id="admin-roster-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ADMIN PASSCODE MODAL -->
+  <div id="admin-auth-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <h3 class="font-bold text-xl text-slate-800 mb-2">Teacher Admin Access</h3>
+      <form action="javascript:void(0);" onsubmit="window.handleAdminAuth(event)" class="space-y-4">
+        <input type="password" id="admin-passcode-input" placeholder="Enter PIN Passcode" required class="w-full text-center py-3 px-4 rounded-xl border-2 border-slate-200 outline-none text-base font-bold">
+        <div class="flex space-x-2">
+          <button type="button" onclick="window.closeAdminModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-sm">Cancel</button>
+          <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm">Unlock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // STORIES DATABASE
+    const STORIES = [
+      {
+        id: 1, title: "The Mystery of the Missing Compass", topic: "Mystery",
+        text: "Maya and her dog, Barnaby, loved exploring Oakridge Forest every Saturday morning. Today, Maya opened her backpack near the old stone bridge to check her map, but her silver compass was gone. They searched near the muddy path where they saw a colorful blue jay earlier. Suddenly, Maya noticed small reflections under a tall oak tree. She walked closer and saw the silver compass resting inside a nest of twigs. A curious crow had borrowed the shiny object!",
+        questions: [
+          { type: "WHO", text: "Who was exploring with Maya?", options: ["A crow", "Barnaby the dog", "Her brother", "A ranger"], answer: 1 },
+          { type: "WHAT", text: "What item was missing?", options: ["Water bottle", "Silver compass", "Map", "Key"], answer: 1 },
+          { type: "WHERE", text: "Where was the compass found?", options: ["Under stone bridge", "Inside a bird nest under an oak tree", "In river", "In pocket"], answer: 1 },
+          { type: "WHEN", text: "When do they explore?", options: ["Friday evening", "Saturday morning", "Sunday afternoon", "Summer"], answer: 1 },
+          { type: "WHY", text: "Why was it under the tree?", options: ["Maya dropped it", "Barnaby buried it", "A crow took it", "Wind blew it"], answer: 2 }
+        ]
+      },
+      {
+        id: 2, title: "The Solar-Powered Oven Project", topic: "Science",
+        text: "Leo wanted to invent a solar oven for the school science fair in May. He gathered a cardboard shoe box, aluminum foil, plastic wrap, and black paper. On Tuesday afternoon, Leo assembled his oven in his backyard under direct sunlight. He placed a marshmallow and chocolate between graham crackers inside. After thirty minutes, the chocolate was gooey and melted from trapped solar heat!",
+        questions: [
+          { type: "WHO", text: "Who built the solar oven?", options: ["Leo", "Maya", "Mr. Davis", "Elena"], answer: 0 },
+          { type: "WHAT", text: "What snack did Leo melt?", options: ["Cheese sandwich", "S'more", "Apple slice", "Biscuit"], answer: 1 },
+          { type: "WHERE", text: "Where did he test it?", options: ["School kitchen", "Backyard under sunlight", "Garage", "Park"], answer: 1 },
+          { type: "WHEN", text: "When is the science fair?", options: ["May", "December", "August", "January"], answer: 0 },
+          { type: "WHY", text: "Why did the chocolate melt?", options: ["Plugged in", "Trapped solar heat", "Hairdryer", "Stove"], answer: 1 }
+        ]
+      }
+    ];
+
+    // MEMORY + LOCAL STORAGE ENGINE
+    window.__memStore = {};
+    const safeStore = {
+      getRecords: function() {
+        try {
+          return JSON.parse(localStorage.getItem("story_app_records") || "[]");
+        } catch(e) {
+          return window.__memStore["story_app_records"] || [];
+        }
+      },
+      saveRecords: function(records) {
+        window.__memStore["story_app_records"] = records;
+        try {
+          localStorage.setItem("story_app_records", JSON.stringify(records));
+        } catch(e) {}
+      }
+    };
+
+    let currentStudent = "";
+    let activeStory = STORIES[0];
+
+    window.navigateTo = function(viewId) {
+      ["login", "daily-locked", "reading", "results", "admin"].forEach(v => {
+        const el = document.getElementById("view-" + v);
+        if (el) el.classList.add("hidden");
+      });
+      const target = document.getElementById("view-" + viewId);
+      if (target) target.classList.remove("hidden");
+    };
+
+    window.handleStudentLogin = function(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById("student-initials");
+      const errBanner = document.getElementById("login-error-banner");
+      if (errBanner) errBanner.classList.add("hidden");
+
+      if (!input || !input.value.trim()) {
+        if (errBanner) {
+          errBanner.textContent = "Please enter your initials.";
+          errBanner.classList.remove("hidden");
+        }
+        return;
+      }
+
+      const initials = input.value.trim().toUpperCase();
+      currentStudent = initials;
+      document.getElementById("current-initials-display").textContent = initials;
+      document.getElementById("active-student-badge").classList.remove("hidden");
+      document.getElementById("active-student-badge").classList.add("flex");
+
+      const records = safeStore.getRecords().filter(r => r.initials === initials);
+      const today = new Date().toISOString().split("T")[0];
+      const doneToday = records.find(r => r.dateKey === today);
+
+      if (doneToday) {
+        document.getElementById("locked-initials").textContent = initials;
+        document.getElementById("locked-date-display").textContent = doneToday.dateDisplay || today;
+        document.getElementById("locked-next-story-num").textContent = (records.length + 1);
+        window.navigateTo("daily-locked");
+      } else {
+        window.loadStory(STORIES[0]);
+      }
+    };
+
+    window.loadStory = function(story) {
+      activeStory = story;
+      document.getElementById("story-badge-num").textContent = `Story ${story.id} of 20`;
+      document.getElementById("story-title").textContent = story.title;
+      document.getElementById("story-topic").textContent = story.topic;
+      document.getElementById("passage-container").innerHTML = `<p>${story.text}</p>`;
+
+      const qContainer = document.getElementById("questions-container");
+      qContainer.innerHTML = "";
+      story.questions.forEach((q, idx) => {
+        const card = document.createElement("div");
+        card.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2";
+        let opts = "";
+        q.options.forEach((o, oIdx) => {
+          opts += `
+            <label class="flex items-center space-x-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer text-sm">
+              <input type="radio" name="q_${idx}" value="${oIdx}" required>
+              <span>${o}</span>
+            </label>
+          `;
+        });
+        card.innerHTML = `<h4 class="font-bold text-sm text-slate-800">Q${idx+1}. ${q.text}</h4><div class="space-y-1">${opts}</div>`;
+        qContainer.appendChild(card);
+      });
+
+      window.navigateTo("reading");
+    };
+
+    window.handleQuizSubmit = function(e) {
+      if (e) e.preventDefault();
+      let raw = 0;
+      activeStory.questions.forEach((q, idx) => {
+        const sel = document.querySelector(`input[name="q_${idx}"]:checked`);
+        if (sel && parseInt(sel.value) === q.answer) raw++;
+      });
+
+      const percent = Math.round((raw / activeStory.questions.length) * 100);
+      const today = new Date().toISOString().split("T")[0];
+
+      const record = {
+        initials: currentStudent,
+        storyId: activeStory.id,
+        scoreRaw: raw,
+        scorePercent: percent,
+        dateKey: today,
+        dateDisplay: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      };
+
+      const records = safeStore.getRecords();
+      records.push(record);
+      safeStore.saveRecords(records);
+
+      document.getElementById("result-score-percent").textContent = percent + "%";
+      document.getElementById("result-score-raw").textContent = `${raw} / ${activeStory.questions.length}`;
+      window.navigateTo("results");
+    };
+
+    window.continueToNextStory = function() {
+      window.navigateTo("login");
+    };
+
+    window.togglePortalMode = function() {
+      document.getElementById("admin-auth-modal").classList.remove("hidden");
+      document.getElementById("admin-passcode-input").value = "";
+    };
+
+    window.closeAdminModal = function() {
+      document.getElementById("admin-auth-modal").classList.add("hidden");
+    };
+
+    window.handleAdminAuth = function(e) {
+      if (e) e.preventDefault();
+      if (document.getElementById("admin-passcode-input").value === "admin123") {
+        window.closeAdminModal();
+        window.navigateTo("admin");
+        window.renderAdminRoster();
+      } else {
+        alert("Incorrect PIN passcode");
+      }
+    };
+
+    window.renderAdminRoster = function() {
+      const tbody = document.getElementById("admin-roster-tbody");
+      tbody.innerHTML = "";
+      const records = safeStore.getRecords();
+      const grouped = {};
+
+      records.forEach(r => {
+        if (!grouped[r.initials]) grouped[r.initials] = [];
+        grouped[r.initials].push(r);
+      });
+
+      Object.keys(grouped).forEach(st => {
+        const list = grouped[st];
+        const avg = Math.round(list.reduce((a,b) => a + b.scorePercent, 0) / list.length);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold">${st}</td>
+          <td class="py-3 px-4">${list.length} / 20</td>
+          <td class="py-3 px-4 font-bold text-indigo-600">${avg}%</td>
+          <td class="py-3 px-4 text-xs text-slate-500">${list[list.length-1].dateDisplay || 'Recent'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    };
+
+    window.playPassageAudio = function() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(activeStory.text);
+        window.speechSynthesis.speak(utt);
+      }
+    };
+
+    window.logoutStudent = function() {
+      currentStudent = "";
+      document.getElementById("active-student-badge").classList.add("hidden");
+      window.navigateTo("login");
+    };
+
+    window.seedDemoData = function() {
+      const demo = [
+        { initials: "JD", storyId: 1, scoreRaw: 5, scorePercent: 100, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" },
+        { initials: "MK", storyId: 1, scoreRaw: 4, scorePercent: 80, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" }
+      ];
+      safeStore.saveRecords(demo);
+      window.renderAdminRoster();
+    };
+
+    window.exportDataCSV = function() {
+      const records = safeStore.getRecords();
+      let csv = "Student Initials,Story ID,Score Raw,Score Percent,Date\n";
+      records.forEach(r => {
+        csv += `"${r.initials}",${r.storyId},${r.scoreRaw}/5,${r.scorePercent}%,${r.dateDisplay || r.dateKey}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "Reading_Progress.csv";
+      a.click();
+    };
+  </script>
+</body>
+</html>
