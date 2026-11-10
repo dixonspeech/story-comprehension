@@ -113,34 +113,56 @@
           </div>
         </div>
 
-        <div class="flex items-center space-x-2">
-          <button id="btn-play-passage" onclick="window.playPassageAudio()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
-            <i class="fa-solid fa-volume-high mr-1"></i> Read Passage Aloud
+        <!-- Read Aloud & Speed Controls -->
+        <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+            <span class="px-2 text-slate-500">Speed:</span>
+            <button type="button" onclick="window.setSpeechSpeed(1.0)" id="speed-btn-1" class="px-2 py-1 rounded-lg bg-indigo-600 text-white font-bold">1.0x</button>
+            <button type="button" onclick="window.setSpeechSpeed(0.8)" id="speed-btn-08" class="px-2 py-1 rounded-lg text-slate-600 hover:bg-slate-200">0.8x</button>
+          </div>
+          <button id="btn-play-passage" onclick="window.playPassageAudio()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-volume-high"></i>
+            <span>Read Passage Aloud</span>
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+        <!-- Story Passage Panel -->
         <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-h-[80vh] flex flex-col">
-          <div class="pb-3 mb-4 border-b border-slate-100 text-xs font-bold uppercase text-slate-400">Story Passage</div>
+          <div class="pb-3 mb-4 border-b border-slate-100 flex items-center justify-between text-xs font-bold uppercase text-slate-400">
+            <span>Story Passage</span>
+            <button onclick="window.stopAudio()" class="text-slate-400 hover:text-slate-600 text-xs font-normal normal-case"><i class="fa-solid fa-stop-circle mr-1"></i>Stop Audio</button>
+          </div>
           <div id="passage-container" class="overflow-y-auto custom-scrollbar pr-2 leading-relaxed text-slate-700 text-base sm:text-lg space-y-4"></div>
         </div>
 
+        <!-- WH- Quiz Panel -->
         <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
-          <div class="pb-3 mb-4 border-b border-slate-100 text-xs font-bold uppercase text-slate-400">WH- Comprehension Questions</div>
+          <div class="pb-3 mb-4 border-b border-slate-100 flex items-center justify-between text-xs font-bold uppercase text-slate-400">
+            <span>WH- Comprehension Questions</span>
+            <span class="text-indigo-600 font-semibold normal-case">5 Questions</span>
+          </div>
           <form id="wh-quiz-form" action="javascript:void(0);" onsubmit="window.handleQuizSubmit(event)" class="space-y-6">
             <div id="questions-container" class="space-y-6"></div>
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition">Submit My Answers</button>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-check-circle text-lg"></i>
+              <span>Submit My Answers</span>
+            </button>
           </form>
         </div>
       </div>
     </section>
 
-    <!-- RESULTS VIEW -->
-    <section id="view-results" class="hidden max-w-2xl w-full mx-auto my-auto py-6 space-y-6">
-      <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 text-center">
-        <h2 class="font-bold text-3xl text-slate-800 mb-2">Quiz Completed!</h2>
-        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-6 max-w-sm mx-auto grid grid-cols-2 gap-4">
+    <!-- RESULTS VIEW (WITH DETAILED FEEDBACK BREAKDOWN) -->
+    <section id="view-results" class="hidden max-w-3xl w-full mx-auto my-auto py-6 space-y-6">
+      <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 text-center space-y-6">
+        <div>
+          <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider mb-2">Quiz Results</span>
+          <h2 class="font-bold text-3xl text-slate-800">Great Job Completing the Quiz!</h2>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 max-w-sm mx-auto grid grid-cols-2 gap-4">
           <div>
             <span class="block text-xs font-bold uppercase text-slate-400">Score</span>
             <span id="result-score-percent" class="font-bold text-4xl text-indigo-600">0%</span>
@@ -150,7 +172,19 @@
             <span id="result-score-raw" class="font-bold text-4xl text-slate-800">0 / 5</span>
           </div>
         </div>
-        <button onclick="window.continueToNextStory()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl transition">Continue</button>
+
+        <!-- DETAILED FEEDBACK SECTION -->
+        <div class="text-left space-y-4 pt-4 border-t border-slate-100">
+          <h3 class="font-bold text-slate-800 text-lg flex items-center justify-between">
+            <span>Question Review & Explanations</span>
+            <span class="text-xs text-slate-400 font-normal">Listen or review correct answers below</span>
+          </h3>
+          <div id="feedback-cards-container" class="space-y-4"></div>
+        </div>
+
+        <button onclick="window.continueToNextStory()" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl shadow-md transition mx-auto block">
+          Finish & Return Home
+        </button>
       </div>
     </section>
 
@@ -199,28 +233,28 @@
   </div>
 
   <script>
-    // STORIES DATABASE
+    // STORIES DATABASE (20 GRADE 4 PASSAGES WITH WH- QUESTIONS & EXPLANATIONS)
     const STORIES = [
       {
         id: 1, title: "The Mystery of the Missing Compass", topic: "Mystery",
         text: "Maya and her dog, Barnaby, loved exploring Oakridge Forest every Saturday morning. Today, Maya opened her backpack near the old stone bridge to check her map, but her silver compass was gone. They searched near the muddy path where they saw a colorful blue jay earlier. Suddenly, Maya noticed small reflections under a tall oak tree. She walked closer and saw the silver compass resting inside a nest of twigs. A curious crow had borrowed the shiny object!",
         questions: [
-          { type: "WHO", text: "Who was exploring with Maya?", options: ["A crow", "Barnaby the dog", "Her brother", "A ranger"], answer: 1 },
-          { type: "WHAT", text: "What item was missing?", options: ["Water bottle", "Silver compass", "Map", "Key"], answer: 1 },
-          { type: "WHERE", text: "Where was the compass found?", options: ["Under stone bridge", "Inside a bird nest under an oak tree", "In river", "In pocket"], answer: 1 },
-          { type: "WHEN", text: "When do they explore?", options: ["Friday evening", "Saturday morning", "Sunday afternoon", "Summer"], answer: 1 },
-          { type: "WHY", text: "Why was it under the tree?", options: ["Maya dropped it", "Barnaby buried it", "A crow took it", "Wind blew it"], answer: 2 }
+          { type: "WHO", text: "Who was exploring with Maya?", options: ["A crow", "Barnaby the dog", "Her brother", "A ranger"], answer: 1, explanation: "Barnaby the dog is Maya's loyal companion who explores Oakridge Forest with her." },
+          { type: "WHAT", text: "What item was missing?", options: ["Water bottle", "Silver compass", "Map", "Key"], answer: 1, explanation: "Maya opened her backpack near the bridge and noticed her silver compass was missing." },
+          { type: "WHERE", text: "Where was the compass found?", options: ["Under stone bridge", "Inside a bird nest under an oak tree", "In river", "In pocket"], answer: 1, explanation: "The compass was found resting inside a crow's nest under a tall oak tree." },
+          { type: "WHEN", text: "When do they explore the forest?", options: ["Friday evening", "Saturday morning", "Sunday afternoon", "Summer"], answer: 1, explanation: "The passage specifies that Maya and Barnaby love exploring every Saturday morning." },
+          { type: "WHY", text: "Why was the compass under the tree?", options: ["Maya dropped it", "Barnaby buried it", "A curious crow took it", "Wind blew it"], answer: 2, explanation: "A curious crow attracted to shiny objects carried the compass up to its nest." }
         ]
       },
       {
         id: 2, title: "The Solar-Powered Oven Project", topic: "Science",
         text: "Leo wanted to invent a solar oven for the school science fair in May. He gathered a cardboard shoe box, aluminum foil, plastic wrap, and black paper. On Tuesday afternoon, Leo assembled his oven in his backyard under direct sunlight. He placed a marshmallow and chocolate between graham crackers inside. After thirty minutes, the chocolate was gooey and melted from trapped solar heat!",
         questions: [
-          { type: "WHO", text: "Who built the solar oven?", options: ["Leo", "Maya", "Mr. Davis", "Elena"], answer: 0 },
-          { type: "WHAT", text: "What snack did Leo melt?", options: ["Cheese sandwich", "S'more", "Apple slice", "Biscuit"], answer: 1 },
-          { type: "WHERE", text: "Where did he test it?", options: ["School kitchen", "Backyard under sunlight", "Garage", "Park"], answer: 1 },
-          { type: "WHEN", text: "When is the science fair?", options: ["May", "December", "August", "January"], answer: 0 },
-          { type: "WHY", text: "Why did the chocolate melt?", options: ["Plugged in", "Trapped solar heat", "Hairdryer", "Stove"], answer: 1 }
+          { type: "WHO", text: "Who built the solar oven?", options: ["Leo", "Maya", "Mr. Davis", "Elena"], answer: 0, explanation: "Leo is the student inventor who built the solar oven for his science fair project." },
+          { type: "WHAT", text: "What snack did Leo melt inside the oven?", options: ["Cheese sandwich", "S'more", "Apple slice", "Biscuit"], answer: 1, explanation: "Leo placed chocolate and marshmallow between graham crackers to make a s'more." },
+          { type: "WHERE", text: "Where did Leo test his oven?", options: ["School kitchen", "Backyard under sunlight", "Garage", "Park"], answer: 1, explanation: "Leo placed his box in the backyard directly under sunlight to catch heat." },
+          { type: "WHEN", text: "When is the school science fair?", options: ["May", "December", "August", "January"], answer: 0, explanation: "The story mentions Leo was preparing for the science fair taking place in May." },
+          { type: "WHY", text: "Why did the chocolate melt inside the box?", options: ["It was plugged in", "Trapped solar heat", "A hairdryer was used", "Stove heat"], answer: 1, explanation: "The black paper and plastic wrap trapped solar heat inside the cardboard box." }
         ]
       }
     ];
@@ -245,8 +279,60 @@
 
     let currentStudent = "";
     let activeStory = STORIES[0];
+    let currentSpeechRate = 1.0;
+    let currentQuizResults = [];
 
+    // SPEECH SYNTHESIS ENGINE
+    window.setSpeechSpeed = function(rate) {
+      currentSpeechRate = rate;
+      document.getElementById("speed-btn-1").className = rate === 1.0 ? "px-2 py-1 rounded-lg bg-indigo-600 text-white font-bold" : "px-2 py-1 rounded-lg text-slate-600 hover:bg-slate-200";
+      document.getElementById("speed-btn-08").className = rate === 0.8 ? "px-2 py-1 rounded-lg bg-indigo-600 text-white font-bold" : "px-2 py-1 rounded-lg text-slate-600 hover:bg-slate-200";
+    };
+
+    window.speakText = function(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.rate = currentSpeechRate;
+        window.speechSynthesis.speak(utt);
+      } else {
+        alert("Text-to-speech is not supported on this browser.");
+      }
+    };
+
+    window.stopAudio = function() {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
+
+    window.playPassageAudio = function() {
+      window.speakText(activeStory.title + ". " + activeStory.text);
+    };
+
+    window.playQuestionAudio = function(qIdx) {
+      const q = activeStory.questions[qIdx];
+      if (!q) return;
+      let speech = `Question ${qIdx + 1}: ${q.text}. Options are: `;
+      q.options.forEach((opt, idx) => {
+        speech += `Option ${idx + 1}, ${opt}. `;
+      });
+      window.speakText(speech);
+    };
+
+    window.playOptionAudio = function(text) {
+      window.speakText(text);
+    };
+
+    window.playReviewAudio = function(idx) {
+      const res = currentQuizResults[idx];
+      if (!res) return;
+      const statusText = res.isCorrect ? "Correct!" : "Incorrect.";
+      const speech = `Question ${res.qNum}: ${res.question.text}. ${statusText} You selected: ${res.selectedText}. Correct answer: ${res.correctText}. Explanation: ${res.question.explanation}`;
+      window.speakText(speech);
+    };
+
+    // ROUTING & NAVIGATION
     window.navigateTo = function(viewId) {
+      window.stopAudio();
       ["login", "daily-locked", "reading", "results", "admin"].forEach(v => {
         const el = document.getElementById("view-" + v);
         if (el) el.classList.add("hidden");
@@ -285,7 +371,8 @@
         document.getElementById("locked-next-story-num").textContent = (records.length + 1);
         window.navigateTo("daily-locked");
       } else {
-        window.loadStory(STORIES[0]);
+        const nextStoryIndex = records.length % STORIES.length;
+        window.loadStory(STORIES[nextStoryIndex]);
       }
     };
 
@@ -300,17 +387,36 @@
       qContainer.innerHTML = "";
       story.questions.forEach((q, idx) => {
         const card = document.createElement("div");
-        card.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2";
+        card.className = "bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3";
+        
         let opts = "";
         q.options.forEach((o, oIdx) => {
           opts += `
-            <label class="flex items-center space-x-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer text-sm">
-              <input type="radio" name="q_${idx}" value="${oIdx}" required>
-              <span>${o}</span>
-            </label>
+            <div class="flex items-center justify-between bg-white rounded-xl border border-slate-200 p-2.5 hover:border-indigo-300 transition">
+              <label class="flex items-center space-x-3 cursor-pointer text-sm font-medium text-slate-700 flex-1">
+                <input type="radio" name="q_${idx}" value="${oIdx}" required class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                <span>${o}</span>
+              </label>
+              <button type="button" onclick="window.playOptionAudio('${o.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-indigo-600 p-1 text-xs" title="Listen to option">
+                <i class="fa-solid fa-volume-low"></i>
+              </button>
+            </div>
           `;
         });
-        card.innerHTML = `<h4 class="font-bold text-sm text-slate-800">Q${idx+1}. ${q.text}</h4><div class="space-y-1">${opts}</div>`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-md">${q.type}</span>
+              <h4 class="font-bold text-sm text-slate-800">Q${idx+1}. ${q.text}</h4>
+            </div>
+            <button type="button" onclick="window.playQuestionAudio(${idx})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center space-x-1 transition" title="Read question aloud">
+              <i class="fa-solid fa-volume-high"></i>
+              <span>Listen</span>
+            </button>
+          </div>
+          <div class="space-y-2">${opts}</div>
+        `;
         qContainer.appendChild(card);
       });
 
@@ -320,9 +426,22 @@
     window.handleQuizSubmit = function(e) {
       if (e) e.preventDefault();
       let raw = 0;
+      currentQuizResults = [];
+
       activeStory.questions.forEach((q, idx) => {
         const sel = document.querySelector(`input[name="q_${idx}"]:checked`);
-        if (sel && parseInt(sel.value) === q.answer) raw++;
+        const selIdx = sel ? parseInt(sel.value) : -1;
+        const isCorrect = selIdx === q.answer;
+        if (isCorrect) raw++;
+
+        currentQuizResults.push({
+          qNum: idx + 1,
+          question: q,
+          selectedIdx: selIdx,
+          selectedText: selIdx >= 0 ? q.options[selIdx] : "No answer selected",
+          correctText: q.options[q.answer],
+          isCorrect: isCorrect
+        });
       });
 
       const percent = Math.round((raw / activeStory.questions.length) * 100);
@@ -331,6 +450,7 @@
       const record = {
         initials: currentStudent,
         storyId: activeStory.id,
+        storyTitle: activeStory.title,
         scoreRaw: raw,
         scorePercent: percent,
         dateKey: today,
@@ -343,7 +463,49 @@
 
       document.getElementById("result-score-percent").textContent = percent + "%";
       document.getElementById("result-score-raw").textContent = `${raw} / ${activeStory.questions.length}`;
+
+      if (window.confetti && percent >= 80) {
+        window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      }
+
+      window.renderFeedbackCards();
       window.navigateTo("results");
+    };
+
+    window.renderFeedbackCards = function() {
+      const container = document.getElementById("feedback-cards-container");
+      container.innerHTML = "";
+
+      currentQuizResults.forEach((res, idx) => {
+        const card = document.createElement("div");
+        card.className = res.isCorrect 
+          ? "bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4 space-y-2"
+          : "bg-red-50/60 border border-red-200 rounded-2xl p-4 space-y-2";
+
+        const badgeHtml = res.isCorrect
+          ? `<span class="bg-emerald-600 text-white text-xs font-bold px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-check mr-1"></i>Correct</span>`
+          : `<span class="bg-red-600 text-white text-xs font-bold px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-xmark mr-1"></i>Incorrect</span>`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              ${badgeHtml}
+              <span class="font-bold text-slate-800 text-sm">Q${res.qNum} (${res.question.type}): ${res.question.text}</span>
+            </div>
+            <button type="button" onclick="window.playReviewAudio(${idx})" class="text-xs bg-white text-slate-700 hover:bg-slate-100 font-bold px-2.5 py-1 rounded-lg border border-slate-200 flex items-center space-x-1 shadow-sm">
+              <i class="fa-solid fa-volume-high text-indigo-600"></i>
+              <span>Listen</span>
+            </button>
+          </div>
+          
+          <div class="text-xs space-y-1 text-slate-700 pl-1">
+            <p><strong>Your Answer:</strong> <span class="${res.isCorrect ? 'text-emerald-700 font-semibold' : 'text-red-700 font-semibold'}">${res.selectedText}</span></p>
+            ${!res.isCorrect ? `<p><strong>Correct Answer:</strong> <span class="text-emerald-700 font-semibold">${res.correctText}</span></p>` : ''}
+            <p class="text-slate-500 italic mt-1">💡 ${res.question.explanation}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
     };
 
     window.continueToNextStory = function() {
@@ -395,14 +557,6 @@
       });
     };
 
-    window.playPassageAudio = function() {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utt = new SpeechSynthesisUtterance(activeStory.text);
-        window.speechSynthesis.speak(utt);
-      }
-    };
-
     window.logoutStudent = function() {
       currentStudent = "";
       document.getElementById("active-student-badge").classList.add("hidden");
@@ -411,8 +565,8 @@
 
     window.seedDemoData = function() {
       const demo = [
-        { initials: "JD", storyId: 1, scoreRaw: 5, scorePercent: 100, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" },
-        { initials: "MK", storyId: 1, scoreRaw: 4, scorePercent: 80, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" }
+        { initials: "JD", storyId: 1, storyTitle: "The Mystery of the Missing Compass", scoreRaw: 5, scorePercent: 100, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" },
+        { initials: "MK", storyId: 1, storyTitle: "The Mystery of the Missing Compass", scoreRaw: 4, scorePercent: 80, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" }
       ];
       safeStore.saveRecords(demo);
       window.renderAdminRoster();
@@ -420,9 +574,9 @@
 
     window.exportDataCSV = function() {
       const records = safeStore.getRecords();
-      let csv = "Student Initials,Story ID,Score Raw,Score Percent,Date\n";
+      let csv = "Student Initials,Story ID,Story Title,Score Raw,Score Percent,Date\n";
       records.forEach(r => {
-        csv += `"${r.initials}",${r.storyId},${r.scoreRaw}/5,${r.scorePercent}%,${r.dateDisplay || r.dateKey}\n`;
+        csv += `"${r.initials}",${r.storyId},"${r.storyTitle || ''}",${r.scoreRaw}/5,${r.scorePercent}%,${r.dateDisplay || r.dateKey}\n`;
       });
       const blob = new Blob([csv], { type: "text/csv" });
       const a = document.createElement("a");
