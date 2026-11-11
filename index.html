@@ -188,30 +188,77 @@
       </div>
     </section>
 
-    <!-- TEACHER ADMIN VIEW -->
+    <!-- TEACHER ADMIN VIEW WITH ENHANCED ANALYTICS & DELETE FUNCTIONALITY -->
     <section id="view-admin" class="hidden space-y-6">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h2 class="font-bold text-2xl text-slate-800">Class Progress Roster</h2>
+          <h2 class="font-bold text-2xl text-slate-800">Class Progress & IEP Analytics</h2>
           <p class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-cloud mr-1"></i>Live Cloud Database Connected</p>
         </div>
         <div class="flex space-x-2">
-          <button onclick="window.exportDataCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">Export CSV Data</button>
+          <button onclick="window.exportDataCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center space-x-1">
+            <i class="fa-solid fa-file-csv text-sm"></i>
+            <span>Export CSV Data</span>
+          </button>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
-            <tr>
-              <th class="py-3 px-4">Initials</th>
-              <th class="py-3 px-4">Stories Completed</th>
-              <th class="py-3 px-4">Average Score</th>
-              <th class="py-3 px-4">Last Active</th>
-            </tr>
-          </thead>
-          <tbody id="admin-roster-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
-        </table>
+      <!-- ANALYTICS SUMMARY CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-list-check"></i></div>
+          <div><p class="text-xs font-bold uppercase text-slate-400">Total Stories Completed</p><h3 id="admin-stat-total-stories" class="font-bold text-2xl text-slate-800">0</h3></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-chart-line"></i></div>
+          <div><p class="text-xs font-bold uppercase text-slate-400">Class Average</p><h3 id="admin-stat-class-avg" class="font-bold text-2xl text-emerald-600">0%</h3></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-users"></i></div>
+          <div><p class="text-xs font-bold uppercase text-slate-400">Active Students</p><h3 id="admin-stat-active-students" class="font-bold text-2xl text-slate-800">0</h3></div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-bullseye"></i></div>
+          <div><p class="text-xs font-bold uppercase text-slate-400">Status</p><h3 id="admin-stat-goal-status" class="font-bold text-lg text-slate-800">--</h3></div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS CHART CARD -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center justify-between">
+          <span>Class Average Score per Story (Stories 1 to 20)</span>
+          <span class="text-xs text-slate-400 font-normal">Target: 80%+ Goal</span>
+        </h3>
+        <div class="relative flex-1 min-h-[220px]"><canvas id="chart-story-scores"></canvas></div>
+      </div>
+
+      <!-- ROSTER TABLE WITH SEARCH & DETAILED DRILL-DOWN -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-lg">Student Story Progress Roster</h3>
+            <p class="text-xs text-slate-400">Click any student row to view individual score trends and delete data points.</p>
+          </div>
+          <div class="relative max-w-xs w-full">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="roster-search-input" oninput="window.filterRosterTable()" placeholder="Filter by initials..." class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:outline-none transition" />
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
+              <tr>
+                <th class="py-3.5 px-6">Initials</th>
+                <th class="py-3.5 px-6">Stories Completed</th>
+                <th class="py-3.5 px-6">Average Score</th>
+                <th class="py-3.5 px-6">Last Active</th>
+                <th class="py-3.5 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-roster-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+        <div id="roster-empty-state" class="hidden p-8 text-center text-slate-400 text-sm">No student progress recorded yet.</div>
       </div>
     </section>
 
@@ -231,7 +278,42 @@
     </div>
   </div>
 
+  <!-- STUDENT DRILL-DOWN & DATA POINT DELETION MODAL -->
+  <div id="student-detail-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
+      <div class="p-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 bg-indigo-600 text-white font-bold text-xl rounded-2xl flex items-center justify-center shadow-md shadow-indigo-200" id="detail-avatar">--</div>
+          <div>
+            <h3 class="font-bold text-xl text-slate-800" id="detail-student-title">Student Initials</h3>
+            <p class="text-xs text-slate-500">Individual Story Progress & Data Log</p>
+          </div>
+        </div>
+        <button onclick="window.closeStudentDetailModal()" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+          <h4 class="font-bold text-sm text-slate-800 mb-2">Individual Score Progression</h4>
+          <div class="relative h-48"><canvas id="chart-student-line"></canvas></div>
+        </div>
+        <div>
+          <h4 class="font-bold text-sm text-slate-800 mb-3 flex items-center justify-between">
+            <span>Completed Stories Log</span>
+            <span class="text-xs text-slate-400 font-normal">Click trash icon to delete specific data points</span>
+          </h4>
+          <div class="space-y-3" id="detail-session-history-list"></div>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button onclick="window.closeStudentDetailModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-xl text-sm shadow-md transition">Close Report</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // LIVE FIREBASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyCkFNZsfc9USOf6J5kbjzrskPYM6-KEi8U",
       authDomain: "story-comprehension-tracker.firebaseapp.com",
@@ -474,12 +556,17 @@
     ];
 
     let cachedCloudRecords = [];
-    
+    let chartStoryScoresInstance = null;
+    let chartStudentLineInstance = null;
+
     async function fetchAllRecords() {
       if (db) {
         try {
           const snapshot = await db.collection("student_records").get();
-          cachedCloudRecords = snapshot.docs.map(doc => doc.data());
+          cachedCloudRecords = snapshot.docs.map(doc => ({
+            docId: doc.id,
+            ...doc.data()
+          }));
           return cachedCloudRecords;
         } catch(e) {
           console.error("Cloud fetch error:", e);
@@ -489,9 +576,11 @@
     }
 
     async function saveRecord(record) {
+      record.timestamp = Date.now();
       if (db) {
         try {
-          await db.collection("student_records").add(record);
+          const docRef = await db.collection("student_records").add(record);
+          record.docId = docRef.id;
         } catch(e) {
           console.error("Cloud save error:", e);
         }
@@ -500,6 +589,35 @@
       local.push(record);
       localStorage.setItem("story_app_records", JSON.stringify(local));
     }
+
+    window.deleteDataPoint = async function(docId, timestamp, initials) {
+      if (!confirm(`Are you sure you want to delete this specific data point for student ${initials}?`)) {
+        return;
+      }
+
+      if (db && docId) {
+        try {
+          await db.collection("student_records").doc(docId).delete();
+        } catch(e) {
+          console.error("Cloud delete error:", e);
+        }
+      }
+
+      let local = JSON.parse(localStorage.getItem("story_app_records") || "[]");
+      local = local.filter(r => (r.docId !== docId && r.timestamp !== timestamp));
+      localStorage.setItem("story_app_records", JSON.stringify(local));
+
+      await window.renderAdminRoster();
+      
+      if (initials) {
+        const updatedRecords = (await fetchAllRecords()).filter(r => r.initials === initials);
+        if (updatedRecords.length === 0) {
+          window.closeStudentDetailModal();
+        } else {
+          window.openStudentDetailModal(initials);
+        }
+      }
+    };
 
     let currentStudent = "";
     let activeStory = STORIES[0];
@@ -752,35 +870,180 @@
     };
 
     window.renderAdminRoster = async function() {
-      const tbody = document.getElementById("admin-roster-tbody");
-      tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Loading student records...</td></tr>`;
-      
       const records = await fetchAllRecords();
+
+      // Render 4 Analytics Stat Cards
+      document.getElementById("admin-stat-total-stories").textContent = records.length;
+      document.getElementById("admin-stat-active-students").textContent = new Set(records.map(r => r.initials)).size;
+
+      let totalScore = 0;
+      records.forEach(r => totalScore += (r.scorePercent || 0));
+      const avg = records.length > 0 ? Math.round(totalScore / records.length) : 0;
+      document.getElementById("admin-stat-class-avg").textContent = avg + "%";
+      document.getElementById("admin-stat-goal-status").textContent = avg >= 80 ? "80%+ Goal Met" : "In Progress";
+
+      // Render Class Average Bar Chart (Stories 1 to 20)
+      renderAdminCharts(records);
+
+      // Render Roster Table
+      window.renderRosterTable(records);
+    };
+
+    function renderAdminCharts(records) {
+      const storyAvgMap = {};
+      for (let i = 1; i <= 20; i++) storyAvgMap[i] = [];
+      records.forEach(r => {
+        if (r.storyId && storyAvgMap[r.storyId]) {
+          storyAvgMap[r.storyId].push(r.scorePercent || 0);
+        }
+      });
+
+      const storyLabels = [], storyAverages = [];
+      for (let i = 1; i <= 20; i++) {
+        storyLabels.push(`S${i}`);
+        const arr = storyAvgMap[i];
+        storyAverages.push(arr.length > 0 ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0);
+      }
+
+      const ctxBar = document.getElementById("chart-story-scores");
+      if (ctxBar) {
+        if (chartStoryScoresInstance) chartStoryScoresInstance.destroy();
+        chartStoryScoresInstance = new Chart(ctxBar, {
+          type: 'bar',
+          data: {
+            labels: storyLabels,
+            datasets: [{
+              label: 'Class Avg (%)',
+              data: storyAverages,
+              backgroundColor: '#4f46e5',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { min: 0, max: 100 } }
+          }
+        });
+      }
+    }
+
+    window.renderRosterTable = function(records) {
+      const tbody = document.getElementById("admin-roster-tbody");
+      const emptyState = document.getElementById("roster-empty-state");
       tbody.innerHTML = "";
-      
+
       if (!records || records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No student progress recorded yet.</td></tr>`;
+        emptyState?.classList.remove("hidden");
+        return;
+      }
+      emptyState?.classList.add("hidden");
+
+      const studentMap = {};
+      records.forEach(r => {
+        if (!studentMap[r.initials]) studentMap[r.initials] = [];
+        studentMap[r.initials].push(r);
+      });
+
+      Object.keys(studentMap).forEach(initials => {
+        const list = studentMap[initials];
+        const completedCount = new Set(list.map(r => r.storyId)).size;
+        const avgScore = Math.round(list.reduce((acc, c) => acc + (c.scorePercent || 0), 0) / list.length);
+        const lastActive = list[list.length - 1].dateDisplay || "Recent";
+
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 cursor-pointer transition";
+        tr.onclick = function() { window.openStudentDetailModal(initials); };
+        tr.innerHTML = `
+          <td class="py-3.5 px-6 font-bold text-slate-800 flex items-center space-x-2">
+            <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">${initials}</span>
+            <span>${initials}</span>
+          </td>
+          <td class="py-3.5 px-6 font-semibold">${completedCount} / 20 Stories</td>
+          <td class="py-3.5 px-6 font-bold ${avgScore >= 80 ? 'text-emerald-600' : 'text-amber-600'}">${avgScore}%</td>
+          <td class="py-3.5 px-6 text-slate-500 text-xs">${lastActive}</td>
+          <td class="py-3.5 px-6 text-right">
+            <button class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-1.5 rounded-lg transition">View IEP Report</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    };
+
+    window.filterRosterTable = async function() {
+      const q = document.getElementById("roster-search-input").value.trim().toUpperCase();
+      const records = await fetchAllRecords();
+      const filtered = q ? records.filter(r => r.initials.includes(q)) : records;
+      window.renderRosterTable(filtered);
+    };
+
+    window.openStudentDetailModal = async function(initials) {
+      document.getElementById("student-detail-modal")?.classList.remove("hidden");
+      document.getElementById("detail-avatar").textContent = initials;
+      document.getElementById("detail-student-title").textContent = `Student: ${initials}`;
+
+      const allRecords = await fetchAllRecords();
+      const records = allRecords.filter(r => r.initials === initials);
+      records.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      const labels = records.map(r => `Story #${r.storyId}`);
+      const scores = records.map(r => r.scorePercent || 0);
+
+      const ctxLine = document.getElementById("chart-student-line");
+      if (ctxLine) {
+        if (chartStudentLineInstance) chartStudentLineInstance.destroy();
+        chartStudentLineInstance = new Chart(ctxLine, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Score (%)',
+              data: scores,
+              borderColor: '#4f46e5',
+              fill: true,
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { min: 0, max: 100 } }
+          }
+        });
+      }
+
+      const historyList = document.getElementById("detail-session-history-list");
+      historyList.innerHTML = "";
+
+      if (records.length === 0) {
+        historyList.innerHTML = `<p class="text-xs text-slate-400">No data points remaining for this student.</p>`;
         return;
       }
 
-      const grouped = {};
       records.forEach(r => {
-        if (!grouped[r.initials]) grouped[r.initials] = [];
-        grouped[r.initials].push(r);
-      });
-
-      Object.keys(grouped).forEach(st => {
-        const list = grouped[st];
-        const avg = Math.round(list.reduce((a,b) => a + (b.scorePercent || 0), 0) / list.length);
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="py-3 px-4 font-bold">${st}</td>
-          <td class="py-3 px-4">${list.length} / 20</td>
-          <td class="py-3 px-4 font-bold text-indigo-600">${avg}%</td>
-          <td class="py-3 px-4 text-xs text-slate-500">${list[list.length-1].dateDisplay || 'Recent'}</td>
+        const item = document.createElement("div");
+        item.className = "bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between text-xs";
+        item.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-800">Story #${r.storyId}: ${r.storyTitle || 'Reading Passage'}</span>
+            <span class="block text-slate-400 text-[11px]">${r.dateDisplay || r.dateKey || 'Recent'}</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <span class="font-bold text-sm ${r.scorePercent >= 80 ? 'text-emerald-600' : 'text-amber-600'}">${r.scorePercent}%</span>
+              <span class="block text-slate-400 text-[11px]">(${r.scoreRaw}/5)</span>
+            </div>
+            <button type="button" onclick="window.deleteDataPoint('${r.docId || ''}', ${r.timestamp || 0}, '${r.initials}')" class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition" title="Delete this data point">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         `;
-        tbody.appendChild(tr);
+        historyList.appendChild(item);
       });
+    };
+
+    window.closeStudentDetailModal = function() {
+      document.getElementById("student-detail-modal")?.classList.add("hidden");
     };
 
     window.logoutStudent = function() {
@@ -798,7 +1061,7 @@
       const blob = new Blob([csv], { type: "text/csv" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "Reading_Progress.csv";
+      a.download = "Reading_Progress_IEP_Report.csv";
       a.click();
     };
   </script>
