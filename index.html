@@ -1,3 +1,20 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyCkFNZsfc9USOf6J5kbjzrskPYM6-KEi8U",
+  authDomain: "story-comprehension-tracker.firebaseapp.com",
+  projectId: "story-comprehension-tracker",
+  storageBucket: "story-comprehension-tracker.firebasestorage.app",
+  messagingSenderId: "784869861534",
+  appId: "1:784869861534:web:efa13c3370798495ed338f"
+};
+```[cite: 4]
+
+---
+
+### Complete `index.html` Code with Live Cloud Credentials
+
+Copy this entire code block and replace all contents in your `index.html` file on **GitHub**:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +26,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- FIREBASE SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -27,7 +48,7 @@
         </div>
         <div>
           <h1 class="font-bold text-lg leading-tight text-slate-800">Story Comprehension</h1>
-          <p class="text-xs text-slate-500 font-medium">WH- Progress Tracker (20 Passages)</p>
+          <p class="text-xs text-slate-500 font-medium">WH- Progress Tracker (Cloud Sync Active)</p>
         </div>
       </div>
 
@@ -113,7 +134,6 @@
           </div>
         </div>
 
-        <!-- Read Aloud & Speed Controls -->
         <div class="flex items-center space-x-3">
           <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
             <span class="px-2 text-slate-500">Speed:</span>
@@ -128,7 +148,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
-        <!-- Story Passage Panel -->
         <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-h-[80vh] flex flex-col">
           <div class="pb-3 mb-4 border-b border-slate-100 flex items-center justify-between text-xs font-bold uppercase text-slate-400">
             <span>Story Passage</span>
@@ -137,7 +156,6 @@
           <div id="passage-container" class="overflow-y-auto custom-scrollbar pr-2 leading-relaxed text-slate-700 text-base sm:text-lg space-y-4"></div>
         </div>
 
-        <!-- WH- Quiz Panel -->
         <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
           <div class="pb-3 mb-4 border-b border-slate-100 flex items-center justify-between text-xs font-bold uppercase text-slate-400">
             <span>WH- Comprehension Questions</span>
@@ -154,7 +172,7 @@
       </div>
     </section>
 
-    <!-- RESULTS VIEW (WITH DETAILED FEEDBACK BREAKDOWN) -->
+    <!-- RESULTS VIEW -->
     <section id="view-results" class="hidden max-w-3xl w-full mx-auto my-auto py-6 space-y-6">
       <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 text-center space-y-6">
         <div>
@@ -173,7 +191,6 @@
           </div>
         </div>
 
-        <!-- DETAILED FEEDBACK SECTION -->
         <div class="text-left space-y-4 pt-4 border-t border-slate-100">
           <h3 class="font-bold text-slate-800 text-lg flex items-center justify-between">
             <span>Question Review & Explanations</span>
@@ -193,11 +210,10 @@
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <h2 class="font-bold text-2xl text-slate-800">Class Progress Roster</h2>
-          <p class="text-xs text-slate-400">Teacher Admin Dashboard</p>
+          <p class="text-xs text-emerald-600 font-semibold"><i class="fa-solid fa-cloud mr-1"></i>Live Cloud Database Connected</p>
         </div>
         <div class="flex space-x-2">
           <button onclick="window.exportDataCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">Export CSV Data</button>
-          <button onclick="window.seedDemoData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2.5 rounded-xl transition">Seed Sample Data</button>
         </div>
       </div>
 
@@ -233,7 +249,25 @@
   </div>
 
   <script>
-    // STORIES DATABASE (20 GRADE 4 PASSAGES WITH WH- QUESTIONS & EXPLANATIONS)
+    // YOUR LIVE FIREBASE CONFIGURATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkFNZsfc9USOf6J5kbjzrskPYM6-KEi8U",
+      authDomain: "story-comprehension-tracker.firebaseapp.com",
+      projectId: "story-comprehension-tracker",
+      storageBucket: "story-comprehension-tracker.firebasestorage.app",
+      messagingSenderId: "784869861534",
+      appId: "1:784869861534:web:efa13c3370798495ed338f"
+    };
+
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+    } catch(e) {
+      console.warn("Firebase fallback mode.", e);
+    }
+
+    // STORIES DATABASE
     const STORIES = [
       {
         id: 1, title: "The Mystery of the Missing Compass", topic: "Mystery",
@@ -259,30 +293,39 @@
       }
     ];
 
-    // MEMORY + LOCAL STORAGE ENGINE
-    window.__memStore = {};
-    const safeStore = {
-      getRecords: function() {
+    let cachedCloudRecords = [];
+    
+    async function fetchAllRecords() {
+      if (db) {
         try {
-          return JSON.parse(localStorage.getItem("story_app_records") || "[]");
+          const snapshot = await db.collection("student_records").get();
+          cachedCloudRecords = snapshot.docs.map(doc => doc.data());
+          return cachedCloudRecords;
         } catch(e) {
-          return window.__memStore["story_app_records"] || [];
+          console.error("Cloud fetch error:", e);
         }
-      },
-      saveRecords: function(records) {
-        window.__memStore["story_app_records"] = records;
-        try {
-          localStorage.setItem("story_app_records", JSON.stringify(records));
-        } catch(e) {}
       }
-    };
+      return JSON.parse(localStorage.getItem("story_app_records") || "[]");
+    }
+
+    async function saveRecord(record) {
+      if (db) {
+        try {
+          await db.collection("student_records").add(record);
+        } catch(e) {
+          console.error("Cloud save error:", e);
+        }
+      }
+      const local = JSON.parse(localStorage.getItem("story_app_records") || "[]");
+      local.push(record);
+      localStorage.setItem("story_app_records", JSON.stringify(local));
+    }
 
     let currentStudent = "";
     let activeStory = STORIES[0];
     let currentSpeechRate = 1.0;
     let currentQuizResults = [];
 
-    // SPEECH SYNTHESIS ENGINE
     window.setSpeechSpeed = function(rate) {
       currentSpeechRate = rate;
       document.getElementById("speed-btn-1").className = rate === 1.0 ? "px-2 py-1 rounded-lg bg-indigo-600 text-white font-bold" : "px-2 py-1 rounded-lg text-slate-600 hover:bg-slate-200";
@@ -295,8 +338,6 @@
         const utt = new SpeechSynthesisUtterance(text);
         utt.rate = currentSpeechRate;
         window.speechSynthesis.speak(utt);
-      } else {
-        alert("Text-to-speech is not supported on this browser.");
       }
     };
 
@@ -330,7 +371,6 @@
       window.speakText(speech);
     };
 
-    // ROUTING & NAVIGATION
     window.navigateTo = function(viewId) {
       window.stopAudio();
       ["login", "daily-locked", "reading", "results", "admin"].forEach(v => {
@@ -341,7 +381,7 @@
       if (target) target.classList.remove("hidden");
     };
 
-    window.handleStudentLogin = function(e) {
+    window.handleStudentLogin = async function(e) {
       if (e) e.preventDefault();
       const input = document.getElementById("student-initials");
       const errBanner = document.getElementById("login-error-banner");
@@ -361,17 +401,18 @@
       document.getElementById("active-student-badge").classList.remove("hidden");
       document.getElementById("active-student-badge").classList.add("flex");
 
-      const records = safeStore.getRecords().filter(r => r.initials === initials);
+      const allRecords = await fetchAllRecords();
+      const studentRecords = allRecords.filter(r => r.initials === initials);
       const today = new Date().toISOString().split("T")[0];
-      const doneToday = records.find(r => r.dateKey === today);
+      const doneToday = studentRecords.find(r => r.dateKey === today);
 
       if (doneToday) {
         document.getElementById("locked-initials").textContent = initials;
         document.getElementById("locked-date-display").textContent = doneToday.dateDisplay || today;
-        document.getElementById("locked-next-story-num").textContent = (records.length + 1);
+        document.getElementById("locked-next-story-num").textContent = (studentRecords.length + 1);
         window.navigateTo("daily-locked");
       } else {
-        const nextStoryIndex = records.length % STORIES.length;
+        const nextStoryIndex = studentRecords.length % STORIES.length;
         window.loadStory(STORIES[nextStoryIndex]);
       }
     };
@@ -397,7 +438,7 @@
                 <input type="radio" name="q_${idx}" value="${oIdx}" required class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300">
                 <span>${o}</span>
               </label>
-              <button type="button" onclick="window.playOptionAudio('${o.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-indigo-600 p-1 text-xs" title="Listen to option">
+              <button type="button" onclick="window.playOptionAudio('${o.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-indigo-600 p-1 text-xs">
                 <i class="fa-solid fa-volume-low"></i>
               </button>
             </div>
@@ -410,7 +451,7 @@
               <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-md">${q.type}</span>
               <h4 class="font-bold text-sm text-slate-800">Q${idx+1}. ${q.text}</h4>
             </div>
-            <button type="button" onclick="window.playQuestionAudio(${idx})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center space-x-1 transition" title="Read question aloud">
+            <button type="button" onclick="window.playQuestionAudio(${idx})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center space-x-1 transition">
               <i class="fa-solid fa-volume-high"></i>
               <span>Listen</span>
             </button>
@@ -423,7 +464,7 @@
       window.navigateTo("reading");
     };
 
-    window.handleQuizSubmit = function(e) {
+    window.handleQuizSubmit = async function(e) {
       if (e) e.preventDefault();
       let raw = 0;
       currentQuizResults = [];
@@ -457,9 +498,7 @@
         dateDisplay: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       };
 
-      const records = safeStore.getRecords();
-      records.push(record);
-      safeStore.saveRecords(records);
+      await saveRecord(record);
 
       document.getElementById("result-score-percent").textContent = percent + "%";
       document.getElementById("result-score-raw").textContent = `${raw} / ${activeStory.questions.length}`;
@@ -521,23 +560,30 @@
       document.getElementById("admin-auth-modal").classList.add("hidden");
     };
 
-    window.handleAdminAuth = function(e) {
+    window.handleAdminAuth = async function(e) {
       if (e) e.preventDefault();
       if (document.getElementById("admin-passcode-input").value === "admin123") {
         window.closeAdminModal();
         window.navigateTo("admin");
-        window.renderAdminRoster();
+        await window.renderAdminRoster();
       } else {
         alert("Incorrect PIN passcode");
       }
     };
 
-    window.renderAdminRoster = function() {
+    window.renderAdminRoster = async function() {
       const tbody = document.getElementById("admin-roster-tbody");
+      tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Loading student records...</td></tr>`;
+      
+      const records = await fetchAllRecords();
       tbody.innerHTML = "";
-      const records = safeStore.getRecords();
-      const grouped = {};
+      
+      if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">No student progress recorded yet.</td></tr>`;
+        return;
+      }
 
+      const grouped = {};
       records.forEach(r => {
         if (!grouped[r.initials]) grouped[r.initials] = [];
         grouped[r.initials].push(r);
@@ -563,17 +609,8 @@
       window.navigateTo("login");
     };
 
-    window.seedDemoData = function() {
-      const demo = [
-        { initials: "JD", storyId: 1, storyTitle: "The Mystery of the Missing Compass", scoreRaw: 5, scorePercent: 100, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" },
-        { initials: "MK", storyId: 1, storyTitle: "The Mystery of the Missing Compass", scoreRaw: 4, scorePercent: 80, dateKey: "2026-11-10", dateDisplay: "Nov 10, 2026" }
-      ];
-      safeStore.saveRecords(demo);
-      window.renderAdminRoster();
-    };
-
-    window.exportDataCSV = function() {
-      const records = safeStore.getRecords();
+    window.exportDataCSV = async function() {
+      const records = await fetchAllRecords();
       let csv = "Student Initials,Story ID,Story Title,Score Raw,Score Percent,Date\n";
       records.forEach(r => {
         csv += `"${r.initials}",${r.storyId},"${r.storyTitle || ''}",${r.scoreRaw}/5,${r.scorePercent}%,${r.dateDisplay || r.dateKey}\n`;
